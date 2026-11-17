@@ -18,12 +18,12 @@ jobs:
           cache: 'pip'
       - name: Run unittest
         run: |
-          python -m unittest discover -p 'test*.py'
+          python -m unittest discover -p 'test*.py' 2> results.txt
       #- run: pip install -r requirements.txt
       #- run: pytest --junitxml=test-results.xml
-      #- uses: actions/upload-artifact@v7
-      #  if: always()
-      #  with:
-      #    name: test-results-${{ matrix.python-version }}
-      #    path: test-results.xml
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: results.txt
+          path: results.txt
           
