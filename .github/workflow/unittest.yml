@@ -16,11 +16,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
+      - name: Run unittest
+        run: |
+          python -m unittest discover -p 'test*.py'
       #- run: pip install -r requirements.txt
-      - run: pytest --junitxml=test-results.xml
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: test-results-${{ matrix.python-version }}
-          path: test-results.xml
+      #- run: pytest --junitxml=test-results.xml
+      #- uses: actions/upload-artifact@v7
+      #  if: always()
+      #  with:
+      #    name: test-results-${{ matrix.python-version }}
+      #    path: test-results.xml
           
