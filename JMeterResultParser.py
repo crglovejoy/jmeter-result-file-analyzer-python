@@ -92,7 +92,7 @@ def _generate_metrics(
         bucket.strftime(LABEL_DATETIME_FORMAT),
         fields[header_indexes.label_col].strip(),
         str_to_bool(fields[header_indexes.success_col]),
-        int(fields[header_indexes.elapsed_col].strip()),
+        int(fields[header_indexes.elapsed_col].strip())
     )
 
 
@@ -114,7 +114,7 @@ def generate_metrics(
 def process_file(
     file_path: str | os.PathLike[str],
     datetime_bucket_manager: DateTimeBucketManager,
-    sample_collection: SampleCollection,
+    sample_collection: SampleCollection
 ) -> None:
     header_indexes = None
 
@@ -175,7 +175,7 @@ def get_bucket_stats_lists(
     datetime_strings: list[str],
     output_datetime_strings: list[str],
     label_list: list[str],
-    sample_collection: SampleCollection,
+    sample_collection: SampleCollection
 ) -> tuple[list[str], list[str], list[str]]:
     headers = ",".join(output_datetime_strings)
     total_count_lines = [f"TOTAL_REQUESTS:\nlabel,{headers}\n"]
@@ -209,7 +209,7 @@ def get_bucket_stats_lists(
 def create_report(
     file_path: str | os.PathLike[str],
     datetime_bucket_manager: DateTimeBucketManager,
-    sample_collection: SampleCollection,
+    sample_collection: SampleCollection
 ) -> None:
     labels = sample_collection.label_list
     buckets = datetime_bucket_manager.datetime_buckets
