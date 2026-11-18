@@ -1,7 +1,10 @@
+import argparse
 import csv
 import os
+import sys
 import traceback
 import tomllib
+
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -241,31 +244,41 @@ def create_report(
         output_file.writelines(requests_per_second_lines)
 
 
-def main() -> None:
+def main(config_file: str | os.PathLike[str] = "config.toml") -> None:
     try:
         working_directory = Path.cwd()
-        with open(working_directory / "config.toml", "rb") as f:
+        with open(working_directory / config_file, "rb") as f:
             config = tomllib.load(f)
         datetime_bucket_manager = DateTimeBucketManager(config["bucket_minutes"])
         sample_collection = SampleCollection()
 
-        rslt_files = config["jmeter_csv_stats_file"].split("|")
+        rslt_files = config["jmeter_stats_files"].split("|")
         for file_name in rslt_files:
             process_file(
                 working_directory / file_name,
                 datetime_bucket_manager,
-                sample_collection,
+                sample_collection
             )
 
         create_report(
-            working_directory / config["output_csv_summary_file"],
+            working_directory / config["output_summary_file"],
             datetime_bucket_manager,
-            sample_collection,
+            sample_collection
         )
+
+        sys.exit(0)
     except Exception as error:
         print("Exception occurred:", error)
         traceback.print_exc()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "config_file",
+        nargs="?",
+        default="config.toml",
+        help="TOML configuration file (default: config.toml)",
+    )
+    main(parser.parse_args().config_file)

@@ -1,0 +1,62 @@
+name: Testing
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  unit-test:
+    runs-on: ubuntu-26.04
+    strategy:
+      matrix:
+        python-version: ["3.15"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run unittest
+        run: |
+          python -m unittest discover -p 'Test*.py' 2> results.txt
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: results.txt
+          path: results.txt
+
+  jmeter-test:
+    needs: unit-test
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v7
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Apache JMeter
+        run: |
+          wget https://apache.org
+          tar -xzf apache-jmeter-5.6.3.tgz
+
+      - name: Execute JMeter Test
+        run: |
+          ./apache-jmeter-5.6.3/bin/jmeter -n -t ResultFileGenerator.jmx -l jmeter_test_result.jtl -e -o ./html-report
+      - name: Run Python Results Analyzer
+        run: python JmeterResultParser.py jmeter_test_config.toml
+      - name: Upload Results & HTML Report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jmeter-reports
+          path: |
+            results.jtl
+            ./html-report
+            jmeter_test_summary.csv
+
+
+
+          

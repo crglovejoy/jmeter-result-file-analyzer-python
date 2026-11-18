@@ -1,3 +1,5 @@
 bucket_minutes = 1
-jmeter_csv_stats_file = "jmx_results1.csv|jmx_results2.csv"
-output_csv_summary_file = "summary.csv"
+# specify .csv or .jtl files
+jmeter_stats_files = "jmx_results1.csv|jmx_results2.csv"
+# output will be a comma-seperated values content
+output_summary_file = "summary.csv"
