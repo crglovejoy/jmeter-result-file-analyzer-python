@@ -68,9 +68,9 @@ class TestSampleCollection(unittest.TestCase):
         request_rollup = collection.get_overall_rollup_sample("request")
         self.assertEqual(request_rollup.consumed_secs, 40.0)
         self.assertEqual(request_rollup.perc_50, 20.0)
-        self.assertEqual(request_rollup.perc_75, 25.0)
-        self.assertEqual(request_rollup.perc_90, 28.0)
-        self.assertEqual(request_rollup.perc_95, 29.0)
+        self.assertEqual(request_rollup.perc_75, 35.0)
+        self.assertEqual(request_rollup.perc_90, 44.0)
+        self.assertEqual(request_rollup.perc_95, 47.0)
 
         bucket_stats = collection.get_bucket_stats(["bucket1", "bucket2"], "request")
         self.assertEqual(bucket_stats[0], [1, 1])
@@ -79,9 +79,9 @@ class TestSampleCollection(unittest.TestCase):
 
         other_rollup = collection.get_overall_rollup_sample("other")
         self.assertEqual(other_rollup.perc_50, 45.0)
-        self.assertEqual(other_rollup.perc_75, 47.5)
-        self.assertEqual(other_rollup.perc_90, 49.0)
-        self.assertEqual(other_rollup.perc_95, 49.5)
+        self.assertEqual(other_rollup.perc_75, 52.5)
+        self.assertEqual(other_rollup.perc_90, 57.0)
+        self.assertEqual(other_rollup.perc_95, 58.5)
 
     def test_sample_dict_is_read_only_and_label_list_is_a_copy(self):
         collection = SampleCollection()
