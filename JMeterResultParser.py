@@ -249,11 +249,14 @@ def main() -> None:
         datetime_bucket_manager = DateTimeBucketManager(config["bucket_minutes"])
         sample_collection = SampleCollection()
 
-        process_file(
-            working_directory / config["jmeter_csv_stats_file"],
-            datetime_bucket_manager,
-            sample_collection,
-        )
+        rslt_files = config["jmeter_csv_stats_file"].split("|")
+        for file_name in rslt_files:
+            process_file(
+                working_directory / file_name,
+                datetime_bucket_manager,
+                sample_collection,
+            )
+
         create_report(
             working_directory / config["output_csv_summary_file"],
             datetime_bucket_manager,
