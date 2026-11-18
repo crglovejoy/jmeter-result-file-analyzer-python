@@ -1,5 +1,7 @@
 bucket_minutes = 1
+
 # specify .csv or .jtl files
 jmeter_stats_files = "jmeter_test_result.jtl"
+
 # output will be a comma-seperated values content
-output_summary_file = "jmeter_test_summary.csv"
+output_summary_file = "python_analysis_summary.csv"

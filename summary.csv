@@ -1,6 +1,6 @@
 OVERALL STATS:
 label,tot_count,succ_count,err_count,succ_%,requests_per_sec,avg_succ_elapsed_ms,avg_err_elapsed_ms,avg_elapsed_ms,50th_%_elapsed_ms,75th_%_elapsed_ms,90th_%_elapsed_ms,95th_%_elapsed_ms
-Snoopy Request,2134,1886,248,88.38,7.11,260.71,256.35,260.20, 259.00,389.00,465.70,485.00
+Snoopy Request,2134,1886,248,88.38,7.11,260.71,256.35,260.20, 259.00,389.00,466.00,485.00
 Lucy Request,2236,2028,208,90.70,7.45,257.44,255.94,257.30, 258.50,385.00,453.00,482.00
 Linus Request,2030,1858,172,91.53,6.77,265.48,255.70,264.66, 265.00,392.00,465.00,486.00
 
