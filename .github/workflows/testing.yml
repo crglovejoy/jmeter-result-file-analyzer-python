@@ -17,20 +17,22 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Run unittest
         run: |
-          python -m unittest discover -p 'Test*.py' 2> results.txt
+          python -m unittest discover -p 'Test*.py' 2> unittest_results.txt
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: results.txt
-          path: results.txt
+          name: unittest_results.txt
+          path: unittest_results.txt
 
   jmeter-test:
     needs: unit-test
     runs-on: ubuntu-26.04
+    strategy:
+      matrix:
+        python-version: ["3.15"]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@v7
       - name: Set up Java
         uses: actions/setup-java@v6
         with:
@@ -44,6 +46,9 @@ jobs:
       - name: Execute JMeter Test
         run: |
           ./apache-jmeter-5.6.3/bin/jmeter -n -t ResultFileGenerator.jmx -l jmeter_test_result.jtl -e -o ./html-report
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: Run Python Results Analyzer
         run: python JmeterResultParser.py jmeter_test_config.toml
       - name: Upload Results & HTML Report
@@ -52,7 +57,7 @@ jobs:
         with:
           name: jmeter-reports
           path: |
-            results.jtl
+            jmeter_test_result.jtl
             ./html-report
             jmeter_test_summary.csv
 
