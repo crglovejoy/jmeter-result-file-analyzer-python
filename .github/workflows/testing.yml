@@ -36,12 +36,11 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-
       - name: Install Apache JMeter
         run: |
-          wget https://apache.org
+          wget -q https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz
           tar -xzf apache-jmeter-5.6.3.tgz
-
+          echo "$GITHUB_WORKSPACE/apache-jmeter-5.6.3/bin" >> $GITHUB_PATH
       - name: Execute JMeter Test
         run: |
           ./apache-jmeter-5.6.3/bin/jmeter -n -t ResultFileGenerator.jmx -l jmeter_test_result.jtl -e -o ./html-report
