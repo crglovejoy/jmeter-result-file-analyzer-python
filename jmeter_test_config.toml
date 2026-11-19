@@ -6,12 +6,10 @@ jmeter_stats_files = "jmeter_test_result.jtl"
 # output will be a comma-seperated values content
 output_summary_file = "python_analysis_summary.csv"
 
-# string of items delimited by | with each item being formatted as label:metric:operator:threshold_value
-# thresholds to get a test pass
-thresholds = "Snoopy Request:tot_count:>:280|Lucy Request:avg_elapsed_ms:<:288.22|Linus Request:avg_elapsed_ms:<:290.66|Lucy Request:95th_%_elapsed_ms:<:495.0"
-# thresholds to get a test fail
-<<<<<<< HEAD
-#thresholds = "Snoopy Request:avg_elapsed_ms:<:270.2|Lucy Request:avg_elapsed_ms:<:20.3|Linus Request:avg_elapsed_ms:<:99.66|Lucy Request:95th_%_elapsed_ms:<:5.77"
-=======
-#thresholds = "Snoopy Request:avg_elapsed_ms:<:270.2|Lucy Request:avg_elapsed_ms:<:20.3|Linus Request:avg_elapsed_ms:<:99.66|Lucy Request:95th_%_elapsed_ms:<:5.77"
->>>>>>> 748352426b3b04ac8ca13b3236caadb34c8f431e
+# format is <label>|<metric>|<operator>|<threshold_value>
+threshold_list = [
+    "Snoopy Request|tot_count|>|280",
+    "Lucy Request|avg_elapsed_ms|<|288.22",
+    "Linus Request|avg_elapsed_ms|<|290.66",
+    "Lucy Request|95th_%_elapsed_ms|<|500.0"
+]

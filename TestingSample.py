@@ -27,9 +27,7 @@ class TestSample(unittest.TestCase):
         self.assertEqual(sample.min_ms, 10)
         self.assertEqual(sample.max_ms, 40)
         self.assertEqual(sample.calc_avg_elapsed_ms(), 25.0)
-        self.assertEqual(sample.calc_avg_success_elapsed_ms(), 25.0)
-        self.assertEqual(sample.calc_avg_error_elapsed_ms(), 25.0)
-        self.assertEqual(sample.calc_success_rate(), 75.0)
+        self.assertEqual(sample.calc_error_rate(), 25.0)
         self.assertEqual(sample.calc_items_per_second(), 0.0)
 
         sample.set_consumed_secs(10)
@@ -42,7 +40,7 @@ class TestSample(unittest.TestCase):
         self.assertEqual(sample.perc_90, 30.0)
         self.assertEqual(sample.perc_95, 40.0)
 
-    def test_rollup_calculations_with_zero_successes_or_errors(self):
+    def test_error_rate_with_all_errors_or_no_errors(self):
         no_successes = RollupSample(
             total_count=2,
             elapsed_ms=10,
@@ -51,9 +49,7 @@ class TestSample(unittest.TestCase):
             success_count=0,
             success_elapsed_ms=0,
         )
-        self.assertEqual(no_successes.calc_avg_success_elapsed_ms(), 0.0)
-        self.assertEqual(no_successes.calc_avg_error_elapsed_ms(), 5.0)
-        self.assertEqual(no_successes.calc_success_rate(), 0.0)
+        self.assertEqual(no_successes.calc_error_rate(), 100.0)
 
         no_errors = RollupSample(
             total_count=2,
@@ -63,8 +59,7 @@ class TestSample(unittest.TestCase):
             success_count=2,
             success_elapsed_ms=10,
         )
-        self.assertEqual(no_errors.calc_avg_error_elapsed_ms(), 0.0)
-        self.assertEqual(no_errors.calc_success_rate(), 100.0)
+        self.assertEqual(no_errors.calc_error_rate(), 0.0)
 
     def test_combine_sample_into_rollup(self):
         sample = Sample(1, 5, 1, 5)

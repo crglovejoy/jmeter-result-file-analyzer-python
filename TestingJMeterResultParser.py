@@ -25,10 +25,8 @@ class TestJMeterResultParser(unittest.TestCase):
             error_count=1,
             min_ms=3.0,
             max_ms=30.0,
-            calc_success_rate=Mock(return_value=50.0),
+            calc_error_rate=Mock(return_value=50.0),
             calc_items_per_second=Mock(return_value=1.25),
-            calc_avg_success_elapsed_ms=Mock(return_value=10.5),
-            calc_avg_error_elapsed_ms=Mock(return_value=0.0),
             calc_avg_elapsed_ms=Mock(return_value=5.25),
             perc_50=3.0,
             perc_75=4.0,
@@ -100,7 +98,7 @@ class TestJMeterResultParser(unittest.TestCase):
         criteria_collection = Mock()
 
         def evaluate_threshold(label, metric, value):
-            if metric == "succ_%":
+            if metric == "err_perc":
                 return True, False, "threshold failed\n", ""
             if metric == "avg_elapsed_ms":
                 return True, True, "", "threshold passed\n"
@@ -124,8 +122,6 @@ class TestJMeterResultParser(unittest.TestCase):
                 3.0,
                 30.0,
                 1.25,
-                10.5,
-                0.0,
                 5.25,
                 3.0,
                 4.0,
@@ -146,12 +142,10 @@ class TestJMeterResultParser(unittest.TestCase):
                         "tot_count",
                         "succ_count",
                         "err_count",
-                        "succ_%",
+                        "err_perc",
                         "min_ms",
                         "max_ms",
-                        "requests_per_sec",
-                        "avg_succ_elapsed_ms",
-                        "avg_err_elapsed_ms",
+                        "trans_per_sec",
                         "avg_elapsed_ms",
                         "50th_%_elapsed_ms",
                         "75th_%_elapsed_ms",
@@ -180,7 +174,7 @@ class TestJMeterResultParser(unittest.TestCase):
 
         self.assertEqual(
             lines[1],
-            "Search,2,1,1,50.00,3.00,30.00,1.25,10.50,0.00,5.25,3.00,4.00,6.00,8.00\n",
+            "Search,2,1,1,50.00,3.00,30.00,1.25,5.25,3.00,4.00,6.00,8.00\n",
         )
         self.assertEqual(failures, [])
         self.assertEqual(passes, [])

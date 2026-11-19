@@ -18,11 +18,24 @@ from Sample import RollupSample
 LABEL_DATETIME_FORMAT: Final[str] = "%Y-%m-%d %H:%M:%S"
 OUTPUT_DATETIME_FORMAT: Final[str] = "%Y-%m-%d %H:%M"
 REQUIRED_HEADERS: Final[set[str]] = {"timeStamp", "elapsed", "label", "success"}
-OVERALL_METRICS_HDR_LIST: Final[list[str]] = [
-    "tot_count","succ_count","err_count","succ_%","min_ms","max_ms","requests_per_sec","avg_succ_elapsed_ms","avg_err_elapsed_ms",
-    "avg_elapsed_ms","50th_%_elapsed_ms","75th_%_elapsed_ms","90th_%_elapsed_ms","95th_%_elapsed_ms"
-]
 
+# constant string values used for reporting and metric value threshold analysis
+TOTAL_COUNT: Final[str] = "tot_count"
+SUCC_COUNT: Final[str] = "succ_count"
+ERR_COUNT: Final[str] = "err_count"
+ERR_PERC: Final[str] = "err_perc"
+MIN_MS: Final[str] = "min_ms"
+MAX_MS: Final[str] = "max_ms"
+TRANS_PER_SEC: Final[str] = "trans_per_sec"
+AVG_ELAPSED_MS: Final[str] = "avg_elapsed_ms"
+PERC_50TH_ELAPSED_MS: Final[str] = "50th_%_elapsed_ms"
+PERC_75TH_ELAPSED_MS: Final[str] = "75th_%_elapsed_ms"
+PERC_90TH_ELAPSED_MS: Final[str] = "90th_%_elapsed_ms"
+PERC_95TH_ELAPSED_MS: Final[str] = "95th_%_elapsed_ms"
+OVERALL_METRICS_HDR_LIST: Final[list[str]] = [
+    TOTAL_COUNT, SUCC_COUNT, ERR_COUNT, ERR_PERC, MIN_MS, MAX_MS, TRANS_PER_SEC, AVG_ELAPSED_MS, PERC_50TH_ELAPSED_MS,  
+    PERC_75TH_ELAPSED_MS, PERC_90TH_ELAPSED_MS, PERC_95TH_ELAPSED_MS
+]
 
 @dataclass
 class HeaderIndexes:
@@ -43,59 +56,7 @@ class HeaderIndexes:
 def str_to_bool(value: str) -> bool:
     return value.strip().lower() in {"true", "yes", "y", "1", "t"}
 
-def get_overall_metrics_and_execute_threshold_analysis(label:str, pass_fail_criteria_coll: PassFailCriteriaCollection, 
-    rollup_sample: RollupSample) -> tuple[list[float], list[str], list[str]]:
-
-    threshold_fail_msg_list: list[str] = []
-    threshold_pass_msg_list: list[str] = []
-    metric_hdr_list = OVERALL_METRICS_HDR_LIST
-    metric_value_list: list[float] = [0.0] * len(metric_hdr_list)
-
-    for index, metric in enumerate(metric_hdr_list):
-        match metric:
-            case "tot_count":
-                metric_value_list[index] = rollup_sample.total_count
-            case "succ_count":
-                metric_value_list[index] = rollup_sample.success_count
-            case "err_count":
-                metric_value_list[index] = rollup_sample.error_count
-            case "succ_%":
-                metric_value_list[index] = rollup_sample.calc_success_rate()
-            case "min_ms":
-                metric_value_list[index] = rollup_sample.min_ms
-            case "max_ms":
-                metric_value_list[index] = rollup_sample.max_ms
-            case "requests_per_sec":
-                metric_value_list[index] = rollup_sample.calc_items_per_second()
-            case "avg_succ_elapsed_ms":
-                metric_value_list[index] = rollup_sample.calc_avg_success_elapsed_ms()
-            case "avg_err_elapsed_ms":
-                metric_value_list[index] = rollup_sample.calc_avg_error_elapsed_ms()
-            case "avg_elapsed_ms":
-                metric_value_list[index] = rollup_sample.calc_avg_elapsed_ms()
-            case "50th_%_elapsed_ms":
-                metric_value_list[index] = rollup_sample.perc_50
-            case "75th_%_elapsed_ms":
-                metric_value_list[index] = rollup_sample.perc_75
-            case "90th_%_elapsed_ms":
-                metric_value_list[index] = rollup_sample.perc_90
-            case "95th_%_elapsed_ms":
-                metric_value_list[index] = rollup_sample.perc_95
-            case _:
-                raise NotImplementedError(f"{metric} is not a supported metric type")
-
-    for index, metric in enumerate(metric_hdr_list):
-        found, passed, fail_str, pass_str = pass_fail_criteria_coll.find_and_execute_pass_fail_criteria_and_return_success(label, metric, metric_value_list[index])
-        if found: 
-            if not passed:
-                threshold_fail_msg_list.append(fail_str)
-            else:
-                threshold_pass_msg_list.append(pass_str)
-        
-
-    return metric_value_list, threshold_fail_msg_list, threshold_pass_msg_list
     
-
 def get_datetime_str_list(
     datetime_list: list[datetime], format_string: str
 ) -> list[str]:
@@ -197,8 +158,61 @@ def process_file(
         raise ValueError("Could not find the required headers in the input file")
 
 
+def get_overall_metrics_and_execute_threshold_analysis(
+    label:str, 
+    pass_fail_criteria_coll: PassFailCriteriaCollection, 
+    rollup_sample: RollupSample
+) -> tuple[list[float], list[str], list[str]]:
+
+    threshold_fail_msg_list: list[str] = []
+    threshold_pass_msg_list: list[str] = []
+    metric_hdr_list = OVERALL_METRICS_HDR_LIST
+    metric_value_list: list[float] = [0.0] * len(metric_hdr_list)
+
+    for index, metric in enumerate(metric_hdr_list):
+        if metric == TOTAL_COUNT:
+            metric_value_list[index] = rollup_sample.total_count
+        elif metric == SUCC_COUNT:
+            metric_value_list[index] = rollup_sample.success_count
+        elif metric == ERR_COUNT:
+            metric_value_list[index] = rollup_sample.error_count
+        elif metric == ERR_PERC:
+            metric_value_list[index] = rollup_sample.calc_error_rate()
+        elif metric == MIN_MS:
+            metric_value_list[index] = rollup_sample.min_ms
+        elif metric == MAX_MS:
+            metric_value_list[index] = rollup_sample.max_ms
+        elif metric == TRANS_PER_SEC:
+            metric_value_list[index] = rollup_sample.calc_items_per_second()
+        elif metric == AVG_ELAPSED_MS:
+            metric_value_list[index] = rollup_sample.calc_avg_elapsed_ms()
+        elif metric == PERC_50TH_ELAPSED_MS:
+            metric_value_list[index] = rollup_sample.perc_50
+        elif metric == PERC_75TH_ELAPSED_MS:
+            metric_value_list[index] = rollup_sample.perc_75
+        elif metric == PERC_90TH_ELAPSED_MS:
+            metric_value_list[index] = rollup_sample.perc_90
+        elif metric == PERC_95TH_ELAPSED_MS:
+            metric_value_list[index] = rollup_sample.perc_95
+        else:
+            raise NotImplementedError(f"{metric} is not a supported metric type")
+
+    for index, metric in enumerate(metric_hdr_list):
+        found, passed, fail_str, pass_str = pass_fail_criteria_coll.find_and_execute_pass_fail_criteria_and_return_success(label, metric, metric_value_list[index])
+        if found: 
+            if not passed:
+                threshold_fail_msg_list.append(fail_str)
+            else:
+                threshold_pass_msg_list.append(pass_str)
+        
+
+    return metric_value_list, threshold_fail_msg_list, threshold_pass_msg_list
+
+
 def get_overall_stats_list(
-    label_list: list[str], sample_collection: SampleCollection, pass_fail_criteria_coll: PassFailCriteriaCollection
+    label_list: list[str], 
+    sample_collection: SampleCollection, 
+    pass_fail_criteria_coll: PassFailCriteriaCollection
 ) -> tuple[list[str], list[str], list[str]]:
     threshold_fail_msg_list: list[str] = []
     threshold_pass_msg_list: list[str] = []
@@ -315,7 +329,7 @@ def main(config_file: str | os.PathLike[str] = "config.toml") -> None:
         datetime_bucket_manager = DateTimeBucketManager(config["bucket_minutes"])
         sample_collection = SampleCollection()
         PassFailCriteria.set_valid_metric_list(OVERALL_METRICS_HDR_LIST)
-        pass_fail_criteria_coll = PassFailCriteriaCollection.create_and_populate_pf_criteria_collection(config["thresholds"])
+        pass_fail_criteria_coll = PassFailCriteriaCollection.create_and_populate_pf_criteria_collection(config["threshold_list"])
 
         rslt_files = config["jmeter_stats_files"].split("|")
         for file_name in rslt_files:

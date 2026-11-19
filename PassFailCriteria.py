@@ -1,5 +1,5 @@
 from types import MappingProxyType
-from typing import Final, Mapping
+from typing import Mapping
 
 def greater_than_result(value: float, threshold_value: float) -> bool:
     return value > threshold_value
@@ -11,8 +11,6 @@ def equal_to_result(value: float, threshold_value: float) -> bool:
     return value == threshold_value
 
 
-
-
 class PassFailCriteria:
     __slots__ = ("__label", "__operator", "__metric", "__threshold_value", "__func")
 
@@ -22,7 +20,12 @@ class PassFailCriteria:
     def set_valid_metric_list(cls, valid_metric_list: list[str]):
         cls.__valid_metric_list = valid_metric_list
 
-    def __init__(self, label: str, metric: str, operator: str, threshold_value: float):
+    def __init__(self, 
+        label: str, 
+        metric: str, 
+        operator: str, 
+        threshold_value: float
+    ):
         if (metric not in self.__valid_metric_list):
             raise NotImplementedError(f"{metric} is not a supported metric type")
         
@@ -79,17 +82,16 @@ class PassFailCriteriaCollection:
         return f"{label}_{metric}"
     
     @staticmethod
-    def create_and_populate_pf_criteria_collection(pf_criteria_str: str) -> PassFailCriteriaCollection:
+    def create_and_populate_pf_criteria_collection(pf_criteria_str_list: list[str]) -> PassFailCriteriaCollection:
         pass_fail_coll = PassFailCriteriaCollection()
 
-        if not pf_criteria_str:
+        if not pf_criteria_str_list:
             return pass_fail_coll
-        if not pf_criteria_str.strip():
+        if len(pf_criteria_str_list) == 0:
             return pass_fail_coll
-        
-        criteria_items = pf_criteria_str.split("|")
-        for item in criteria_items:
-            criteria = item.split(":")
+
+        for criteria_str in pf_criteria_str_list:
+            criteria = criteria_str.split("|")
             if len(criteria) != 4:
                 raise ValueError(f"Expected 4 items in a criteria and got {len(criteria)}: {criteria}")
 

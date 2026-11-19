@@ -124,19 +124,8 @@ class RollupSample(Sample):
     def calc_avg_elapsed_ms(self) -> float:
         return self.elapsed_ms / self.total_count
 
-    def calc_avg_success_elapsed_ms(self) -> float:
-        if self.success_count == 0:
-            return 0.0
-        return self.success_elapsed_ms / self.success_count
-
-    def calc_avg_error_elapsed_ms(self) -> float:
-        error_count = self.error_count
-        if error_count == 0:
-            return 0.0
-        return (self.elapsed_ms - self.success_elapsed_ms) / error_count
-
-    def calc_success_rate(self) -> float:
-        return self.success_count / self.total_count * 100
+    def calc_error_rate(self) -> float:
+        return self.error_count / self.total_count * 100
 
     def calc_items_per_second(self) -> float:
         if self.__consumed_secs == 0.0:
