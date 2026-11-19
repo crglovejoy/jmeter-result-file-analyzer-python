@@ -1,3 +1,16 @@
 bucket_minutes = 1
-jmeter_csv_stats_file = "jmx_results1.csv|jmx_results2.csv"
-output_csv_summary_file = "summary.csv"
+
+# specify .csv or .jtl files
+jmeter_stats_files = "jmx_results1.csv|jmx_results2.csv"
+
+# output will be a comma-seperated values content
+output_summary_file = "summary.csv"
+
+# format is <label>|<metric>|<operator>|<threshold_value>
+# The last 3 of these are expected to fail in the analysis
+threshold_list = [
+    "Snoopy Request|avg_elapsed_ms|<|270.2",
+    "Lucy Request|avg_elapsed_ms|<|20.3",
+    "Linus Request|avg_elapsed_ms|<|99.66",
+    "Lucy Request|95th_%_elapsed_ms|<|5.77"
+]

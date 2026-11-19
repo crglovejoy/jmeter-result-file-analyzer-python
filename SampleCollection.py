@@ -1,8 +1,8 @@
-from math import ceil, floor
-from types import MappingProxyType
-from typing import Final, Mapping
+import statistics
 
 from Sample import RollupSample, Sample
+from types import MappingProxyType
+from typing import Final, Mapping
 
 OVERALL_SUMMARY_LABEL_PREFIX: Final[str] = "overall_rollup"
 BUCKET_SUMMARY_LABEL_PREFIX: Final[str] = "bucket_rollup"
@@ -66,29 +66,17 @@ class SampleCollection:
         existing = self.__sample_dict.get(rollup_label)
         if existing is None:
             self.__sample_dict[rollup_label] = RollupSample(
-                sample.total_count,
-                sample.elapsed_ms,
-                sample.success_count,
-                sample.success_elapsed_ms,
+                total_count=sample.total_count,
+                elapsed_ms=sample.elapsed_ms,
+                min_ms=sample.elapsed_ms,
+                max_ms=sample.elapsed_ms,
+                success_count=sample.success_count,
+                success_elapsed_ms=sample.success_elapsed_ms,
             )
         else:
             if not isinstance(existing, RollupSample):
                 raise TypeError(f"{rollup_label!r} is not a rollup sample")
             self.__sample_dict[rollup_label] = RollupSample.combine_samples(sample, existing)
-
-    @staticmethod
-    def __calc_percentile_value(sorted_values: list[float], percentile: int) -> float:
-        target_index = (len(sorted_values) - 1) * (percentile / 100.0)
-        lower_index = floor(target_index)
-        upper_index = ceil(target_index)
-
-        if lower_index == upper_index:
-            return sorted_values[lower_index]
-
-        return (
-            sorted_values[lower_index] * (upper_index - target_index)
-            + sorted_values[upper_index] * (target_index - lower_index)
-        )
 
     @classmethod
     def __update_percentile_elapsed_ms(
@@ -96,12 +84,8 @@ class SampleCollection:
     ) -> None:
         if not elapsed_ms_values:
             return
-
-        sorted_values = sorted(elapsed_ms_values)
-        rollup_sample.set_elapsed_ms_percentile(
-            *(cls.__calc_percentile_value(sorted_values, percentile)
-              for percentile in (50, 75, 90, 95))
-        )
+        cuts = statistics.quantiles(elapsed_ms_values, n=100, method="exclusive")
+        rollup_sample.set_elapsed_ms_percentile(cuts[49], cuts[74], cuts[89], cuts[94])
 
     def generate_rollup_metrics(
         self,

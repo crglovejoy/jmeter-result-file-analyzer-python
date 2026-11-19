@@ -1,8 +1,18 @@
+THRESHOLD ANALYSIS FOUND TEST FAILURES
+label=Lucy Request : metric=avg_elapsed_ms : 257.30 < 20.30 was FALSE
+label=Lucy Request : metric=95th_%_elapsed_ms : 482.00 < 5.77 was FALSE
+label=Linus Request : metric=avg_elapsed_ms : 264.66 < 99.66 was FALSE
+
+
+THRESHOLD ANALYSIS FOUND TEST PASSES
+label=Snoopy Request : metric=avg_elapsed_ms : 260.20 < 270.20 was TRUE
+
+
 OVERALL STATS:
-label,tot_count,succ_count,err_count,succ_%,requests_per_sec,avg_succ_elapsed_ms,avg_err_elapsed_ms,avg_elapsed_ms,50th_%_elapsed_ms,75th_%_elapsed_ms,90th_%_elapsed_ms,95th_%_elapsed_ms
-Snoopy Request,2134,1886,248,88.38,7.11,260.71,256.35,260.20, 259.00,389.00,465.70,485.00
-Lucy Request,2236,2028,208,90.70,7.45,257.44,255.94,257.30, 258.50,385.00,453.00,482.00
-Linus Request,2030,1858,172,91.53,6.77,265.48,255.70,264.66, 265.00,392.00,465.00,486.00
+label,tot_count,succ_count,err_count,err_perc,min_ms,max_ms,trans_per_sec,avg_elapsed_ms,50th_%_elapsed_ms,75th_%_elapsed_ms,90th_%_elapsed_ms,95th_%_elapsed_ms
+Snoopy Request,2134,1886,248,11.62,11.00,511.00,7.11,260.20,259.00,389.00,466.00,485.00
+Lucy Request,2236,2028,208,9.30,11.00,509.00,7.45,257.30,258.50,385.00,453.00,482.00
+Linus Request,2030,1858,172,8.47,11.00,515.00,6.77,264.66,265.00,392.00,465.00,486.00
 
 
 TOTAL_REQUESTS:

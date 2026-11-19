@@ -1,0 +1,15 @@
+bucket_minutes = 1
+
+# specify .csv or .jtl files
+jmeter_stats_files = "jmeter_test_result.jtl"
+
+# output will be a comma-seperated values content
+output_summary_file = "python_analysis_summary.csv"
+
+# format is <label>|<metric>|<operator>|<threshold_value>
+threshold_list = [
+    "Snoopy Request|tot_count|>|280",
+    "Lucy Request|avg_elapsed_ms|<|288.22",
+    "Linus Request|avg_elapsed_ms|<|290.66",
+    "Lucy Request|95th_%_elapsed_ms|<|500.0"
+]

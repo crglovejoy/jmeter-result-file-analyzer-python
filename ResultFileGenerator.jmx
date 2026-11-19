@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="ResultFileGenerator">
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+    </TestPlan>
+    <hashTree>
+      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="baseDir" elementType="Argument">
+            <stringProp name="Argument.name">baseDir</stringProp>
+            <stringProp name="Argument.value">${__groovy(import org.apache.jmeter.services.FileServer; FileServer.getFileServer().getBaseDir();)} </stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="durationSecs" elementType="Argument">
+            <stringProp name="Argument.name">durationSecs</stringProp>
+            <stringProp name="Argument.value">90</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </Arguments>
+      <hashTree/>
+      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="setUp Thread Group" enabled="true">
+        <intProp name="ThreadGroup.num_threads">1</intProp>
+        <intProp name="ThreadGroup.ramp_time">1</intProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <stringProp name="LoopController.loops">1</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </SetupThreadGroup>
+      <hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Setup Sampler" enabled="true">
+          <stringProp name="scriptLanguage">groovy</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script">Random rnd = new Random()
+props.put(&apos;rnd&apos;, rnd)</stringProp>
+        </JSR223Sampler>
+        <hashTree>
+          <JSR223PostProcessor guiclass="TestBeanGUI" testclass="JSR223PostProcessor" testname="Setup Ignore" enabled="true">
+            <stringProp name="scriptLanguage">groovy</stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="cacheKey">true</stringProp>
+            <stringProp name="script">prev.setIgnore()</stringProp>
+          </JSR223PostProcessor>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Snoopy Thread Group" enabled="true">
+        <intProp name="ThreadGroup.num_threads">1</intProp>
+        <intProp name="ThreadGroup.ramp_time">1</intProp>
+        <stringProp name="ThreadGroup.duration">${durationSecs}</stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <intProp name="LoopController.loops">-1</intProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
+          <stringProp name="ConstantTimer.delay">20</stringProp>
+        </ConstantTimer>
+        <hashTree/>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="SnoopyRequest" enabled="true">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">import java.nio.charset.StandardCharsets
+
+/* Setup random values to be used in derive the result */
+def rnd = props.get(&apos;rnd&apos;)
+def sleepTime = rnd.nextInt(500) + 10
+def success = (rnd.nextInt(10) != 9)  // fail 10% of requests
+def bytes = rnd.nextInt(200) + 50
+def sentBytes = (rnd.nextInt(3000) + 50) as long
+
+SampleResult.setSampleLabel(&quot;Snoopy Request&quot;)
+SampleResult.setSamplerData(&quot;message body&quot;)
+
+try
+{
+	Thread.sleep(sleepTime)
+	
+	/* Populate the Result */
+	
+	SampleResult.setSentBytes(sentBytes)
+	def varLenStr = &apos;1&apos; * bytes
+	
+	if (success) {
+		SampleResult.setResponseCode(&quot;200&quot;)
+		SampleResult.setResponseMessage(&quot;OK&quot;)
+		SampleResult.setResponseData(&apos;{&quot;status&quot;: &quot;ok&quot;, &quot;id&quot;: &apos; + varLenStr + &apos;}&apos;, StandardCharsets.UTF_8.name())
+	} else {
+		SampleResult.setResponseCode(&quot;400&quot;)
+		SampleResult.setResponseMessage(&quot;Bad Request&quot;)
+		SampleResult.setResponseData(&apos;{&quot;status&quot;: &quot;not ok&quot;, &quot;id&quot;: &apos; + varLenStr + &apos;}&apos;, StandardCharsets.UTF_8.name())
+	}
+	
+	SampleResult.setDataType(org.apache.jmeter.samplers.SampleResult.TEXT)
+	SampleResult.setSuccessful(success)
+
+} catch(Exception ex) {
+    SampleResult.setResponseCode(&quot;500&quot;)
+    SampleResult.setResponseMessage(&quot;Exception: &quot; + e.getMessage())
+    SampleResult.setResponseData(e.toString(), StandardCharsets.UTF_8.name())
+    SampleResult.setSuccessful(false)
+}</stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Sampler>
+        <hashTree/>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Linus Thread Group" enabled="true">
+        <intProp name="ThreadGroup.num_threads">1</intProp>
+        <intProp name="ThreadGroup.ramp_time">1</intProp>
+        <stringProp name="ThreadGroup.duration">${durationSecs}</stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <intProp name="LoopController.loops">-1</intProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
+          <stringProp name="ConstantTimer.delay">30</stringProp>
+        </ConstantTimer>
+        <hashTree/>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="LinusRequest" enabled="true">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">import java.nio.charset.StandardCharsets
+
+/* Setup random values to be used in derive the result */
+def rnd = props.get(&apos;rnd&apos;)
+def sleepTime = rnd.nextInt(500) + 10
+def success = (rnd.nextInt(10) != 9)  // fail 10% of requests
+def bytes = rnd.nextInt(200) + 50
+def sentBytes = (rnd.nextInt(3000) + 50) as long
+
+SampleResult.setSampleLabel(&quot;Linus Request&quot;)
+SampleResult.setSamplerData(&quot;message body&quot;)
+
+try
+{
+	Thread.sleep(sleepTime)
+	
+	/* Populate the Result */
+	
+	SampleResult.setSentBytes(sentBytes)
+	def varLenStr = &apos;1&apos; * bytes
+	
+	if (success) {
+		SampleResult.setResponseCode(&quot;200&quot;)
+		SampleResult.setResponseMessage(&quot;OK&quot;)
+		SampleResult.setResponseData(&apos;{&quot;status&quot;: &quot;ok&quot;, &quot;id&quot;: &apos; + varLenStr + &apos;}&apos;, StandardCharsets.UTF_8.name())
+	} else {
+		SampleResult.setResponseCode(&quot;400&quot;)
+		SampleResult.setResponseMessage(&quot;Bad Request&quot;)
+		SampleResult.setResponseData(&apos;{&quot;status&quot;: &quot;not ok&quot;, &quot;id&quot;: &apos; + varLenStr + &apos;}&apos;, StandardCharsets.UTF_8.name())
+	}
+	
+	SampleResult.setDataType(org.apache.jmeter.samplers.SampleResult.TEXT)
+	SampleResult.setSuccessful(success)
+
+} catch(Exception ex) {
+    SampleResult.setResponseCode(&quot;500&quot;)
+    SampleResult.setResponseMessage(&quot;Exception: &quot; + e.getMessage())
+    SampleResult.setResponseData(e.toString(), StandardCharsets.UTF_8.name())
+    SampleResult.setSuccessful(false)
+}</stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Sampler>
+        <hashTree/>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Lucy Thread Group" enabled="true">
+        <intProp name="ThreadGroup.num_threads">1</intProp>
+        <intProp name="ThreadGroup.ramp_time">1</intProp>
+        <stringProp name="ThreadGroup.duration">${durationSecs}</stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <intProp name="LoopController.loops">-1</intProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
+          <stringProp name="ConstantTimer.delay">10</stringProp>
+        </ConstantTimer>
+        <hashTree/>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="LucyRequest" enabled="true">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">import java.nio.charset.StandardCharsets
+
+/* Setup random values to be used in derive the result */
+def rnd = props.get(&apos;rnd&apos;)
+def sleepTime = rnd.nextInt(500) + 10
+def success = (rnd.nextInt(10) != 9)  // fail 10% of requests
+def bytes = rnd.nextInt(200) + 50
+def sentBytes = (rnd.nextInt(3000) + 50) as long
+
+SampleResult.setSampleLabel(&quot;Lucy Request&quot;)
+SampleResult.setSamplerData(&quot;message body&quot;)
+
+try
+{
+	Thread.sleep(sleepTime)
+	
+	/* Populate the Result */
+	
+	SampleResult.setSentBytes(sentBytes)
+	def varLenStr = &apos;1&apos; * bytes
+	
+	if (success) {
+		SampleResult.setResponseCode(&quot;200&quot;)
+		SampleResult.setResponseMessage(&quot;OK&quot;)
+		SampleResult.setResponseData(&apos;{&quot;status&quot;: &quot;ok&quot;, &quot;id&quot;: &apos; + varLenStr + &apos;}&apos;, StandardCharsets.UTF_8.name())
+	} else {
+		SampleResult.setResponseCode(&quot;400&quot;)
+		SampleResult.setResponseMessage(&quot;Bad Request&quot;)
+		SampleResult.setResponseData(&apos;{&quot;status&quot;: &quot;not ok&quot;, &quot;id&quot;: &apos; + varLenStr + &apos;}&apos;, StandardCharsets.UTF_8.name())
+	}
+	
+	SampleResult.setDataType(org.apache.jmeter.samplers.SampleResult.TEXT)
+	SampleResult.setSuccessful(success)
+
+} catch(Exception ex) {
+    SampleResult.setResponseCode(&quot;500&quot;)
+    SampleResult.setResponseMessage(&quot;Exception: &quot; + e.getMessage())
+    SampleResult.setResponseData(e.toString(), StandardCharsets.UTF_8.name())
+    SampleResult.setSuccessful(false)
+}</stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Sampler>
+        <hashTree/>
+      </hashTree>
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="false">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <ResultCollector guiclass="SimpleDataWriter" testclass="ResultCollector" testname="Simple Data Writer" enabled="false">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename">${baseDir}/jmeter_test_result.jtl</stringProp>
+      </ResultCollector>
+      <hashTree/>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
