@@ -37,6 +37,7 @@ class TestSampleCollection(unittest.TestCase):
         self.assertIsInstance(bucket1_rollup, RollupSample)
         self.assertEqual(bucket1_rollup.total_count, 2)
         self.assertEqual(bucket1_rollup.elapsed_ms, 40.0)
+        self.assertEqual((bucket1_rollup.min_ms, bucket1_rollup.max_ms), (10.0, 30.0))
         self.assertEqual(bucket1_rollup.success_count, 1)
         self.assertEqual(bucket1_rollup.success_elapsed_ms, 10.0)
 
@@ -48,7 +49,23 @@ class TestSampleCollection(unittest.TestCase):
         self.assertEqual(overall_rollup.success_count, 2)
         self.assertEqual(overall_rollup.success_elapsed_ms, 30.0)
         self.assertEqual(overall_rollup.error_count, 1)
+        self.assertEqual((overall_rollup.min_ms, overall_rollup.max_ms), (10.0, 30.0))
         self.assertIn(f"{OVERALL_SUMMARY_LABEL_PREFIX}_request", samples)
+
+    def test_rollup_min_and_max_track_samples_across_buckets(self):
+        collection = SampleCollection()
+        collection.add_sample("bucket1", "request", True, 20)
+        collection.add_sample("bucket2", "request", False, 5)
+        collection.add_sample("bucket2", "request", True, 30)
+
+        samples = collection.sample_dict
+        bucket1_rollup = samples[f"bucket1_{BUCKET_SUMMARY_LABEL_PREFIX}_request"]
+        bucket2_rollup = samples[f"bucket2_{BUCKET_SUMMARY_LABEL_PREFIX}_request"]
+        overall_rollup = collection.get_overall_rollup_sample("request")
+
+        self.assertEqual((bucket1_rollup.min_ms, bucket1_rollup.max_ms), (20.0, 20.0))
+        self.assertEqual((bucket2_rollup.min_ms, bucket2_rollup.max_ms), (5.0, 30.0))
+        self.assertEqual((overall_rollup.min_ms, overall_rollup.max_ms), (5.0, 30.0))
 
     def test_rollup_generation_and_bucket_statistics(self):
         collection = SampleCollection()

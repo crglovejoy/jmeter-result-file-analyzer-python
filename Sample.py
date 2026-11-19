@@ -44,6 +44,8 @@ class RollupSample(Sample):
         "__consumed_secs",
         "__elapsed_ms_percentiles_set",
         "__consumed_secs_set",
+        "__min_ms",
+        "__max_ms",
         "__perc_50",
         "__perc_75",
         "__perc_90",
@@ -54,11 +56,15 @@ class RollupSample(Sample):
         self,
         total_count: int,
         elapsed_ms: float,
+        min_ms: float,
+        max_ms: float,
         success_count: int,
         success_elapsed_ms: float,
     ) -> None:
         super().__init__(total_count, elapsed_ms, success_count, success_elapsed_ms)
         self.__consumed_secs = 0.0
+        self.__min_ms = min_ms
+        self.__max_ms = max_ms
         self.__perc_50 = 0.0
         self.__perc_75 = 0.0
         self.__perc_90 = 0.0
@@ -69,6 +75,14 @@ class RollupSample(Sample):
     @property
     def consumed_secs(self) -> float:
         return self.__consumed_secs
+
+    @property
+    def min_ms(self) -> float:
+        return self.__min_ms
+
+    @property
+    def max_ms(self) -> float:
+        return self.__max_ms
 
     @property
     def perc_50(self) -> float:
@@ -134,6 +148,8 @@ class RollupSample(Sample):
         return RollupSample(
             total_count=sample.total_count + rollup_sample.total_count,
             elapsed_ms=sample.elapsed_ms + rollup_sample.elapsed_ms,
+            min_ms=sample.elapsed_ms if sample.elapsed_ms < rollup_sample.min_ms else rollup_sample.min_ms,
+            max_ms=sample.elapsed_ms if sample.elapsed_ms > rollup_sample.max_ms else rollup_sample.max_ms,
             success_count=sample.success_count + rollup_sample.success_count,
             success_elapsed_ms=(sample.success_elapsed_ms + rollup_sample.success_elapsed_ms)
         )

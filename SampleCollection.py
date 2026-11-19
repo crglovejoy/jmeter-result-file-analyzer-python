@@ -66,10 +66,12 @@ class SampleCollection:
         existing = self.__sample_dict.get(rollup_label)
         if existing is None:
             self.__sample_dict[rollup_label] = RollupSample(
-                sample.total_count,
-                sample.elapsed_ms,
-                sample.success_count,
-                sample.success_elapsed_ms,
+                total_count=sample.total_count,
+                elapsed_ms=sample.elapsed_ms,
+                min_ms=sample.elapsed_ms,
+                max_ms=sample.elapsed_ms,
+                success_count=sample.success_count,
+                success_elapsed_ms=sample.success_elapsed_ms,
             )
         else:
             if not isinstance(existing, RollupSample):
