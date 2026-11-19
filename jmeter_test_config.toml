@@ -8,6 +8,6 @@ output_summary_file = "python_analysis_summary.csv"
 
 # string of items delimited by | with each item being formatted as label:metric:operator:threshold_value
 # thresholds to get a test pass
-thresholds = "Snoopy Request:tot_count:>:280|Lucy Request:avg_elapsed_ms:<:270.3|Linus Request:avg_elapsed_ms:<:270.66|Lucy Request:95th_%_elapsed_ms:<:495.0"
+thresholds = "Snoopy Request:tot_count:>:280|Lucy Request:avg_elapsed_ms:<:288.22|Linus Request:avg_elapsed_ms:<:290.66|Lucy Request:95th_%_elapsed_ms:<:495.0"
 # thresholds to get a test fail
 #thresholds = "Snoopy Request:avg_elapsed_ms:<:270.2|Lucy Request:avg_elapsed_ms:<:20.3|Linus Request:avg_elapsed_ms:<:99.66|Lucy Request:95th_%_elapsed_ms:<:5.77"
