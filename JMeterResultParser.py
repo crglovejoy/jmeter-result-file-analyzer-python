@@ -9,15 +9,19 @@ from dataclasses import dataclass
 from datetime import datetime
 from PassFailCriteria import PassFailCriteria, PassFailCriteriaCollection
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Final
 
 from DateTimeBucketManager import DateTimeBucketManager
 from SampleCollection import SampleCollection
 from Sample import RollupSample
 
-LABEL_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-OUTPUT_DATETIME_FORMAT = "%Y-%m-%d %H:%M"
-REQUIRED_HEADERS = {"timeStamp", "elapsed", "label", "success"}
+LABEL_DATETIME_FORMAT: Final[str] = "%Y-%m-%d %H:%M:%S"
+OUTPUT_DATETIME_FORMAT: Final[str] = "%Y-%m-%d %H:%M"
+REQUIRED_HEADERS: Final[set[str]] = {"timeStamp", "elapsed", "label", "success"}
+OVERALL_METRICS_HDR_LIST: Final[list[str]] = [
+    "tot_count","succ_count","err_count","succ_%","min_ms","max_ms","requests_per_sec","avg_succ_elapsed_ms","avg_err_elapsed_ms",
+    "avg_elapsed_ms","50th_%_elapsed_ms","75th_%_elapsed_ms","90th_%_elapsed_ms","95th_%_elapsed_ms"
+]
 
 
 @dataclass
@@ -39,26 +43,12 @@ class HeaderIndexes:
 def str_to_bool(value: str) -> bool:
     return value.strip().lower() in {"true", "yes", "y", "1", "t"}
 
-
-def label_datetime_format_string() -> str:
-    return LABEL_DATETIME_FORMAT
-
-
-def output_datetime_format_string() -> str:
-    return OUTPUT_DATETIME_FORMAT
-
-def get_overall_metrics_hdr_list() -> list[str]:
-    return [
-            "tot_count","succ_count","err_count","succ_%","requests_per_sec","avg_succ_elapsed_ms","avg_err_elapsed_ms",
-            "avg_elapsed_ms","50th_%_elapsed_ms","75th_%_elapsed_ms","90th_%_elapsed_ms","95th_%_elapsed_ms"
-           ]
-
 def get_overall_metrics_and_execute_threshold_analysis(label:str, pass_fail_criteria_coll: PassFailCriteriaCollection, 
     rollup_sample: RollupSample) -> tuple[list[float], list[str], list[str]]:
 
     threshold_fail_msg_list: list[str] = []
     threshold_pass_msg_list: list[str] = []
-    metric_hdr_list = get_overall_metrics_hdr_list()
+    metric_hdr_list = OVERALL_METRICS_HDR_LIST
     metric_value_list: list[float] = [0.0] * len(metric_hdr_list)
 
     for index, metric in enumerate(metric_hdr_list):
@@ -71,6 +61,10 @@ def get_overall_metrics_and_execute_threshold_analysis(label:str, pass_fail_crit
                 metric_value_list[index] = rollup_sample.error_count
             case "succ_%":
                 metric_value_list[index] = rollup_sample.calc_success_rate()
+            case "min_ms":
+                metric_value_list[index] = rollup_sample.min_ms
+            case "max_ms":
+                metric_value_list[index] = rollup_sample.max_ms
             case "requests_per_sec":
                 metric_value_list[index] = rollup_sample.calc_items_per_second()
             case "avg_succ_elapsed_ms":
@@ -210,7 +204,7 @@ def get_overall_stats_list(
     threshold_pass_msg_list: list[str] = []
 
     lines = [
-        f"OVERALL STATS:\nlabel,{','.join(str(metric) for metric in get_overall_metrics_hdr_list())}\n"
+        f"OVERALL STATS:\nlabel,{','.join(str(metric) for metric in OVERALL_METRICS_HDR_LIST)}\n"
     ]
     
     for label in label_list:
@@ -320,7 +314,7 @@ def main(config_file: str | os.PathLike[str] = "config.toml") -> None:
             config = tomllib.load(f)
         datetime_bucket_manager = DateTimeBucketManager(config["bucket_minutes"])
         sample_collection = SampleCollection()
-        PassFailCriteria.set_valid_metric_list(get_overall_metrics_hdr_list())
+        PassFailCriteria.set_valid_metric_list(OVERALL_METRICS_HDR_LIST)
         pass_fail_criteria_coll = PassFailCriteriaCollection.create_and_populate_pf_criteria_collection(config["thresholds"])
 
         rslt_files = config["jmeter_stats_files"].split("|")
