@@ -7,11 +7,13 @@ import tomllib
 
 from dataclasses import dataclass
 from datetime import datetime
+from PassFailCriteria import PassFailCriteria, PassFailCriteriaCollection
 from pathlib import Path
 from typing import Sequence
 
 from DateTimeBucketManager import DateTimeBucketManager
 from SampleCollection import SampleCollection
+from Sample import RollupSample
 
 LABEL_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 OUTPUT_DATETIME_FORMAT = "%Y-%m-%d %H:%M"
@@ -45,6 +47,60 @@ def label_datetime_format_string() -> str:
 def output_datetime_format_string() -> str:
     return OUTPUT_DATETIME_FORMAT
 
+def get_overall_metrics_hdr_list() -> list[str]:
+    return [
+            "tot_count","succ_count","err_count","succ_%","requests_per_sec","avg_succ_elapsed_ms","avg_err_elapsed_ms",
+            "avg_elapsed_ms","50th_%_elapsed_ms","75th_%_elapsed_ms","90th_%_elapsed_ms","95th_%_elapsed_ms"
+           ]
+
+def get_overall_metrics_and_execute_threshold_analysis(label:str, pass_fail_criteria_coll: PassFailCriteriaCollection, 
+    rollup_sample: RollupSample) -> tuple[list[float], list[str], list[str]]:
+
+    threshold_fail_msg_list: list[str] = []
+    threshold_pass_msg_list: list[str] = []
+    metric_hdr_list = get_overall_metrics_hdr_list()
+    metric_value_list: list[float] = [0.0] * len(metric_hdr_list)
+
+    for index, metric in enumerate(metric_hdr_list):
+        match metric:
+            case "tot_count":
+                metric_value_list[index] = rollup_sample.total_count
+            case "succ_count":
+                metric_value_list[index] = rollup_sample.success_count
+            case "err_count":
+                metric_value_list[index] = rollup_sample.error_count
+            case "succ_%":
+                metric_value_list[index] = rollup_sample.calc_success_rate()
+            case "requests_per_sec":
+                metric_value_list[index] = rollup_sample.calc_items_per_second()
+            case "avg_succ_elapsed_ms":
+                metric_value_list[index] = rollup_sample.calc_avg_success_elapsed_ms()
+            case "avg_err_elapsed_ms":
+                metric_value_list[index] = rollup_sample.calc_avg_error_elapsed_ms()
+            case "avg_elapsed_ms":
+                metric_value_list[index] = rollup_sample.calc_avg_elapsed_ms()
+            case "50th_%_elapsed_ms":
+                metric_value_list[index] = rollup_sample.perc_50
+            case "75th_%_elapsed_ms":
+                metric_value_list[index] = rollup_sample.perc_75
+            case "90th_%_elapsed_ms":
+                metric_value_list[index] = rollup_sample.perc_90
+            case "95th_%_elapsed_ms":
+                metric_value_list[index] = rollup_sample.perc_95
+            case _:
+                raise NotImplementedError(f"{metric} is not a supported metric type")
+
+    for index, metric in enumerate(metric_hdr_list):
+        found, passed, fail_str, pass_str = pass_fail_criteria_coll.find_and_execute_pass_fail_criteria_and_return_success(label, metric, metric_value_list[index])
+        if found: 
+            if not passed:
+                threshold_fail_msg_list.append(fail_str)
+            else:
+                threshold_pass_msg_list.append(pass_str)
+        
+
+    return metric_value_list, threshold_fail_msg_list, threshold_pass_msg_list
+    
 
 def get_datetime_str_list(
     datetime_list: list[datetime], format_string: str
@@ -148,30 +204,28 @@ def process_file(
 
 
 def get_overall_stats_list(
-    label_list: list[str], sample_collection: SampleCollection
-) -> list[str]:
-    lines = [
-        "OVERALL STATS:\n"
-        "label,tot_count,succ_count,err_count,succ_%,requests_per_sec,"
-        "avg_succ_elapsed_ms,avg_err_elapsed_ms,avg_elapsed_ms,"
-        "50th_%_elapsed_ms,75th_%_elapsed_ms,90th_%_elapsed_ms,95th_%_elapsed_ms\n"
-    ]
+    label_list: list[str], sample_collection: SampleCollection, pass_fail_criteria_coll: PassFailCriteriaCollection
+) -> tuple[list[str], list[str], list[str]]:
+    threshold_fail_msg_list: list[str] = []
+    threshold_pass_msg_list: list[str] = []
 
+    lines = [
+        f"OVERALL STATS:\nlabel,{','.join(str(metric) for metric in get_overall_metrics_hdr_list())}\n"
+    ]
+    
     for label in label_list:
         rollup_sample = sample_collection.get_overall_rollup_sample(label)
+        metrics_list, fail_msg_list, pass_msg_list = get_overall_metrics_and_execute_threshold_analysis(label, pass_fail_criteria_coll, rollup_sample)
+        threshold_fail_msg_list.extend(fail_msg_list)
+        threshold_pass_msg_list.extend(pass_msg_list)
+
+
         lines.append(
-            f"{label},{rollup_sample.total_count},{rollup_sample.success_count},"
-            f"{rollup_sample.error_count},{rollup_sample.calc_success_rate():.2f},"
-            f"{rollup_sample.calc_items_per_second():.2f},"
-            f"{rollup_sample.calc_avg_success_elapsed_ms():.2f},"
-            f"{rollup_sample.calc_avg_error_elapsed_ms():.2f},"
-            f"{rollup_sample.calc_avg_elapsed_ms():.2f}, "
-            f"{rollup_sample.perc_50:.2f},{rollup_sample.perc_75:.2f},"
-            f"{rollup_sample.perc_90:.2f},{rollup_sample.perc_95:.2f}\n"
+            f"{label},{','.join(f'{value:.2f}' if isinstance(value, float) else str(value) for value in metrics_list)}\n"
         )
 
     lines.append("\n\n")
-    return lines
+    return lines, threshold_fail_msg_list, threshold_pass_msg_list
 
 
 def get_bucket_stats_lists(
@@ -212,8 +266,9 @@ def get_bucket_stats_lists(
 def create_report(
     file_path: str | os.PathLike[str],
     datetime_bucket_manager: DateTimeBucketManager,
-    sample_collection: SampleCollection
-) -> None:
+    sample_collection: SampleCollection,
+    pass_fail_criteria_coll: PassFailCriteriaCollection
+) -> tuple[list[str], list[str]]:
     labels = sample_collection.label_list
     buckets = datetime_bucket_manager.datetime_buckets
     datetime_strings = get_datetime_str_list(buckets, LABEL_DATETIME_FORMAT)
@@ -229,8 +284,19 @@ def create_report(
         datetime_bucket_manager.get_total_secs_consumed(),
     )
 
+    overall_stats_list, threshold_fail_msg_list, threshold_pass_msg_list = get_overall_stats_list(labels, sample_collection, pass_fail_criteria_coll)
+
     with open(file_path, "w", encoding="utf-8") as output_file:
-        output_file.writelines(get_overall_stats_list(labels, sample_collection))
+        if len(threshold_fail_msg_list) > 0:
+            output_file.write("THRESHOLD ANALYSIS FOUND TEST FAILURES\n")
+            output_file.writelines(threshold_fail_msg_list)
+            output_file.write("\n\n")
+        if len(threshold_pass_msg_list) > 0:
+            output_file.write("THRESHOLD ANALYSIS FOUND TEST PASSES\n")
+            output_file.writelines(threshold_pass_msg_list)
+            output_file.write("\n\n")
+
+        output_file.writelines(overall_stats_list)
         total_count_lines, average_lines, requests_per_second_lines = (
             get_bucket_stats_lists(
                 datetime_strings,
@@ -243,6 +309,9 @@ def create_report(
         output_file.writelines(average_lines)
         output_file.writelines(requests_per_second_lines)
 
+    return threshold_fail_msg_list, threshold_pass_msg_list
+
+
 
 def main(config_file: str | os.PathLike[str] = "config.toml") -> None:
     try:
@@ -251,6 +320,8 @@ def main(config_file: str | os.PathLike[str] = "config.toml") -> None:
             config = tomllib.load(f)
         datetime_bucket_manager = DateTimeBucketManager(config["bucket_minutes"])
         sample_collection = SampleCollection()
+        PassFailCriteria.set_valid_metric_list(get_overall_metrics_hdr_list())
+        pass_fail_criteria_coll = PassFailCriteriaCollection.create_and_populate_pf_criteria_collection(config["thresholds"])
 
         rslt_files = config["jmeter_stats_files"].split("|")
         for file_name in rslt_files:
@@ -260,11 +331,20 @@ def main(config_file: str | os.PathLike[str] = "config.toml") -> None:
                 sample_collection
             )
 
-        create_report(
+        threshold_fail_msg_list, threshold_pass_msg_list = create_report(
             working_directory / config["output_summary_file"],
             datetime_bucket_manager,
-            sample_collection
+            sample_collection,
+            pass_fail_criteria_coll
         )
+
+        if len(threshold_pass_msg_list) > 0:
+            for msg in threshold_pass_msg_list:
+                print(msg.replace("\n", ""))
+        if len(threshold_fail_msg_list) > 0:
+            for msg in threshold_fail_msg_list:
+                print(msg.replace("\n",""))
+            sys.exit(1)
 
         sys.exit(0)
     except Exception as error:
