@@ -1,5 +1,5 @@
 import unittest
-from DateTimeBucketManager import DateTimeBucketManager
+from datetime_bucket_manager import DateTimeBucketManager
 #import logging
 from datetime import datetime
 

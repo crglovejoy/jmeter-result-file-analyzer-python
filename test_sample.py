@@ -1,6 +1,6 @@
 import unittest
 
-from Sample import RollupSample, Sample
+from sample import RollupSample, Sample
 
 
 class TestSample(unittest.TestCase):

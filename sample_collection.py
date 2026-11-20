@@ -1,6 +1,6 @@
 import statistics
 
-from Sample import RollupSample, Sample
+from sample import RollupSample, Sample
 from types import MappingProxyType
 from typing import Final, Mapping
 

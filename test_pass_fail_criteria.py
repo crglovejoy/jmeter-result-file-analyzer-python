@@ -1,8 +1,8 @@
 import unittest
 
-from PassFailCriteria import PassFailCriteria
-from PassFailCriteria import PassFailCriteriaCollection
-from PassFailCriteria import PassFailCriteriaList
+from pass_fail_criteria import PassFailCriteria
+from pass_fail_criteria import PassFailCriteriaCollection
+from pass_fail_criteria import PassFailCriteriaList
 
 
 class TestPassFailCriteria(unittest.TestCase):

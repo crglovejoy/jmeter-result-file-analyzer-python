@@ -5,19 +5,19 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 
-from DateTimeBucketManager import DateTimeBucketManager
-from PassFailCriteria import (
+from datetime_bucket_manager import DateTimeBucketManager
+from pass_fail_criteria import (
     PassFailCriteria,
     get_pass_fail_criteria_collection_from_json,
 )
-from JMeterResultParser import (
+from jmeter_result_parser import (
     get_bucket_stats_lists,
     get_overall_metrics_and_execute_threshold_analysis,
     get_overall_stats_list,
     process_file,
     str_to_bool,
 )
-from SampleCollection import SampleCollection
+from sample_collection import SampleCollection
 
 
 class TestJMeterResultParser(unittest.TestCase):

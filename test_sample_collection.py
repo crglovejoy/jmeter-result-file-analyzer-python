@@ -1,8 +1,8 @@
 import unittest
 from types import MappingProxyType
 
-from Sample import RollupSample, Sample
-from SampleCollection import (
+from sample import RollupSample, Sample
+from sample_collection import (
     BUCKET_SUMMARY_LABEL_PREFIX,
     OVERALL_SUMMARY_LABEL_PREFIX,
     SampleCollection,
