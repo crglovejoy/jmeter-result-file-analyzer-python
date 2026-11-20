@@ -1,7 +1,7 @@
 THRESHOLD ANALYSIS FOUND TEST FAILURES
 label=Lucy Request : metric=avg_elapsed_ms : 257.30 < 20.30 was FALSE
 label=Lucy Request : metric=95th_%_elapsed_ms : 482.00 < 5.77 was FALSE
-label=Linus Request : metric=avg_elapsed_ms : 264.66 < 99.66 was FALSE
+label=Linus Request : metric=avg_elapsed_ms : 264.66 < 99.60 was FALSE
 
 
 THRESHOLD ANALYSIS FOUND TEST PASSES

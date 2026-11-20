@@ -2,6 +2,7 @@ import unittest
 
 from PassFailCriteria import PassFailCriteria
 from PassFailCriteria import PassFailCriteriaCollection
+from PassFailCriteria import PassFailCriteriaList
 
 
 class TestPassFailCriteria(unittest.TestCase):
@@ -62,13 +63,15 @@ class TestPassFailCriteriaCollection(unittest.TestCase):
 
         self.assertEqual(len(criteria_collection.pf_criteria_dict), 0)
 
-    def test_create_and_populate_collection_from_list(self):
+    def test_create_and_populate_collection_from_criteria_list(self):
         criteria_collection = PassFailCriteriaCollection.create_and_populate_pf_criteria_collection(
-            [
-                "label1|metric1|>|22.0",
-                "label2|metric2|<|23.0",
-                "label3|metric3|=|25.0",
-            ]
+            PassFailCriteriaList(
+                [
+                    PassFailCriteria("label1", "metric1", ">", 22.0),
+                    PassFailCriteria("label2", "metric2", "<", 23.0),
+                    PassFailCriteria("label3", "metric3", "=", 25.0),
+                ]
+            )
         )
 
         self.assertEqual(len(criteria_collection.pf_criteria_dict), 3)
@@ -92,26 +95,29 @@ class TestPassFailCriteriaCollection(unittest.TestCase):
 
     def test_create_empty_collection_from_empty_list(self):
         criteria_collection = (
-            PassFailCriteriaCollection.create_and_populate_pf_criteria_collection([])
+            PassFailCriteriaCollection.create_and_populate_pf_criteria_collection(
+                PassFailCriteriaList([])
+            )
         )
 
         self.assertEqual(len(criteria_collection.pf_criteria_dict), 0)
 
-    def test_create_collection_rejects_malformed_criteria(self):
-        with self.assertRaisesRegex(ValueError, "Expected 4 items"):
-            PassFailCriteriaCollection.create_and_populate_pf_criteria_collection(
-                ["label1|metric1|>|22.0", "malformed"]
-            )
-
     def test_create_collection_rejects_duplicate_criteria(self):
         with self.assertRaisesRegex(ValueError, "already exists"):
             PassFailCriteriaCollection.create_and_populate_pf_criteria_collection(
-                ["label1|metric1|>|22.0", "label1|metric1|<|23.0"]
+                PassFailCriteriaList(
+                    [
+                        PassFailCriteria("label1", "metric1", ">", 22.0),
+                        PassFailCriteria("label1", "metric1", "<", 23.0),
+                    ]
+                )
             )
 
     def test_criteria_mapping_is_read_only(self):
         criteria_collection = PassFailCriteriaCollection.create_and_populate_pf_criteria_collection(
-            ["label1|metric1|>|22.0"]
+            PassFailCriteriaList(
+                [PassFailCriteria("label1", "metric1", ">", 22.0)]
+            )
         )
 
         with self.assertRaises(TypeError):
@@ -121,7 +127,9 @@ class TestPassFailCriteriaCollection(unittest.TestCase):
 
     def test_find_and_execute_returns_success_and_failure_details(self):
         criteria_collection = PassFailCriteriaCollection.create_and_populate_pf_criteria_collection(
-            ["label1|metric1|>|22.0"]
+            PassFailCriteriaList(
+                [PassFailCriteria("label1", "metric1", ">", 22.0)]
+            )
         )
 
         self.assertEqual(

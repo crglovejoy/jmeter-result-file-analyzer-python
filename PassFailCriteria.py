@@ -1,5 +1,43 @@
+import json
+
 from types import MappingProxyType
 from typing import Mapping
+
+
+###################################################################
+##  Get Pass Fail Criteria Collection From Json String Function  ##
+###################################################################
+
+def get_pass_fail_criteria_collection_from_json(json_str) -> PassFailCriteriaCollection:
+    pass_fail_criteria_dict = json.loads(json_str)
+    pass_fail_criteria_list = PassFailCriteriaList(
+        [
+            PassFailCriteria(**criteria)
+            for criteria in pass_fail_criteria_dict["pass_fail_criteria_list"]
+        ]
+    )
+
+    return PassFailCriteriaCollection.create_and_populate_pf_criteria_collection(pass_fail_criteria_list)
+
+
+#####################################
+##  CLASS PASS FAIL CRITERIA LIST  ##
+#####################################
+
+class PassFailCriteriaList:
+    __slots__ = ('__pass_fail_criteria_list')
+
+    def __init__(self, pass_fail_criteria_list: list[PassFailCriteria]):
+        self.__pass_fail_criteria_list: list[PassFailCriteria] = pass_fail_criteria_list
+
+    @property
+    def pass_fail_criteria_list(self):
+        return self.__pass_fail_criteria_list.copy()
+
+
+#############################################################
+##  Functions That Execute Comparisons Against Thresholds  ##
+#############################################################
 
 def greater_than_result(value: float, threshold_value: float) -> bool:
     return value > threshold_value
@@ -10,6 +48,10 @@ def lesser_than_result(value: float, threshold_value: float) -> bool:
 def equal_to_result(value: float, threshold_value: float) -> bool:
     return value == threshold_value
 
+
+################################
+##  CLASS PASS FAIL CRITERIA  ##
+################################
 
 class PassFailCriteria:
     __slots__ = ("__label", "__operator", "__metric", "__threshold_value", "__func")
@@ -63,6 +105,10 @@ class PassFailCriteria:
         return passFailCriteria.__func(value, passFailCriteria.threshold_value)
 
 
+###########################################
+##  CLASS PASS FAIL CRITERIA COLLECTION  ##
+###########################################
+
 class PassFailCriteriaCollection:
     __slots__ = ("__pf_criteria_dict")
 
@@ -82,27 +128,15 @@ class PassFailCriteriaCollection:
         return f"{label}_{metric}"
     
     @staticmethod
-    def create_and_populate_pf_criteria_collection(pf_criteria_str_list: list[str]) -> PassFailCriteriaCollection:
+    def create_and_populate_pf_criteria_collection(pf_criteria_list: PassFailCriteriaList) -> PassFailCriteriaCollection:
         pass_fail_coll = PassFailCriteriaCollection()
 
-        if not pf_criteria_str_list:
-            return pass_fail_coll
-        if len(pf_criteria_str_list) == 0:
-            return pass_fail_coll
-
-        for criteria_str in pf_criteria_str_list:
-            criteria = criteria_str.split("|")
-            if len(criteria) != 4:
-                raise ValueError(f"Expected 4 items in a criteria and got {len(criteria)}: {criteria}")
-
-            pass_fail_coll.add_pass_fail_criteria(PassFailCriteria(criteria[0].strip(), criteria[1].strip(), 
-                criteria[2].strip(), float(criteria[3].strip()))
-            )
+        for criteria in pf_criteria_list.pass_fail_criteria_list:
+            pass_fail_coll.add_pass_fail_criteria(criteria)
 
         return pass_fail_coll
 
-
-    def add_pass_fail_criteria(self, pass_fail_criteria: PassFailCriteria):
+    def add_pass_fail_criteria(self, pass_fail_criteria: PassFailCriteria) -> None:
         key_str = self.__get_dict_key_from_pass_fail_criteria(pass_fail_criteria)
         if self.__pf_criteria_dict.get(key_str):
             raise ValueError(f"a pass fail criteria already exists for {pass_fail_criteria.label} : {pass_fail_criteria.metric}")

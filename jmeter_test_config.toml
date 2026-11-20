@@ -1,15 +1,19 @@
 bucket_minutes = 1
 
-# specify .csv or .jtl files
+## specify .csv or .jtl files delimited by |
 jmeter_stats_files = "jmeter_test_result.jtl"
 
-# output will be a comma-seperated values content
+## output will be comma-seperated values (csv) content
 output_summary_file = "python_analysis_summary.csv"
 
-# format is <label>|<metric>|<operator>|<threshold_value>
-threshold_list = [
-    "Snoopy Request|tot_count|>|280",
-    "Lucy Request|avg_elapsed_ms|<|288.22",
-    "Linus Request|avg_elapsed_ms|<|290.66",
-    "Lucy Request|95th_%_elapsed_ms|<|500.0"
-]
+## The last 3 of these are expected to fail in the analysis
+pass_fail_criteria_json = '''{ "pass_fail_criteria_list": [
+    {"label": "Snoopy Request", "metric": "tot_count", "operator": ">", "threshold_value": 280},
+    {"label": "Lucy Request", "metric": "avg_elapsed_ms", "operator": "<", "threshold_value": 288.22},
+    {"label": "Linus Request", "metric": "avg_elapsed_ms", "operator": "<", "threshold_value": 290.66},
+    {"label": "Lucy Request", "metric": "95th_%_elapsed_ms", "operator": "<", "threshold_value": 500.01}
+]}'''
+
+## for no threshold criteria
+#pass_fail_criteria_json = '''{ "pass_fail_criteria_list": [
+#]}'''
