@@ -7,13 +7,13 @@ import tomllib
 
 from dataclasses import dataclass
 from datetime import datetime
-from PassFailCriteria import PassFailCriteria, PassFailCriteriaCollection, get_pass_fail_criteria_collection_from_json
+from pass_fail_criteria import PassFailCriteria, PassFailCriteriaCollection, get_pass_fail_criteria_collection_from_json
 from pathlib import Path
 from typing import Sequence, Final
 
-from DateTimeBucketManager import DateTimeBucketManager
-from SampleCollection import SampleCollection
-from Sample import RollupSample
+from datetime_bucket_manager import DateTimeBucketManager
+from sample_collection import SampleCollection
+from sample_types import RollupSample
 
 
 #################

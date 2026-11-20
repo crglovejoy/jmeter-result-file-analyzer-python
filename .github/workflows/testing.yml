@@ -17,7 +17,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Run unittest
         run: |
-          python -m unittest discover -p 'Test*.py' 2> unittest_results.txt
+          python -m unittest discover -p 'test*.py' 2> unittest_results.txt
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -48,7 +48,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Run Python Results Analyzer
-        run: python JMeterResultParser.py jmeter_test_config.toml
+        run: python jmeter_result_parser.py jmeter_test_config.toml
       - name: Upload Results & HTML Report
         if: always()
         uses: actions/upload-artifact@v7
