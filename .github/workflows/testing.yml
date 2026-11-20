@@ -17,7 +17,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Run unittest
         run: |
-          python -m unittest discover -p 'Test*.py' 2> unittest_results.txt
+          python -m unittest discover -p 'test*.py' 2> unittest_results.txt
       - uses: actions/upload-artifact@v7
         if: always()
         with:
