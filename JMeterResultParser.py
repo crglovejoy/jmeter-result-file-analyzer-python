@@ -7,7 +7,7 @@ import tomllib
 
 from dataclasses import dataclass
 from datetime import datetime
-from PassFailCriteria import PassFailCriteria, PassFailCriteriaCollection
+from PassFailCriteria import PassFailCriteria, PassFailCriteriaCollection, get_pass_fail_criteria_collection_from_json
 from pathlib import Path
 from typing import Sequence, Final
 
@@ -15,11 +15,14 @@ from DateTimeBucketManager import DateTimeBucketManager
 from SampleCollection import SampleCollection
 from Sample import RollupSample
 
+
+#################
+##  Constants  ##
+#################
+
 LABEL_DATETIME_FORMAT: Final[str] = "%Y-%m-%d %H:%M:%S"
 OUTPUT_DATETIME_FORMAT: Final[str] = "%Y-%m-%d %H:%M"
 REQUIRED_HEADERS: Final[set[str]] = {"timeStamp", "elapsed", "label", "success"}
-
-# constant string values used for reporting and metric value threshold analysis
 TOTAL_COUNT: Final[str] = "tot_count"
 SUCC_COUNT: Final[str] = "succ_count"
 ERR_COUNT: Final[str] = "err_count"
@@ -36,6 +39,11 @@ OVERALL_METRICS_HDR_LIST: Final[list[str]] = [
     TOTAL_COUNT, SUCC_COUNT, ERR_COUNT, ERR_PERC, MIN_MS, MAX_MS, TRANS_PER_SEC, AVG_ELAPSED_MS, PERC_50TH_ELAPSED_MS,  
     PERC_75TH_ELAPSED_MS, PERC_90TH_ELAPSED_MS, PERC_95TH_ELAPSED_MS
 ]
+
+
+####################################
+##  Helper Classes and Functions  ##
+####################################
 
 @dataclass
 class HeaderIndexes:
@@ -63,6 +71,10 @@ def get_datetime_str_list(
     return [value.strftime(format_string) for value in datetime_list]
 
 
+####################################################
+##  Input File Processing and Metrics Population  ##
+####################################################
+
 def _find_header_indexes(headers: Sequence[str]) -> HeaderIndexes | None:
     positions = {header: index for index, header in enumerate(headers)}
     if not REQUIRED_HEADERS.issubset(positions):
@@ -79,7 +91,6 @@ def _find_header_indexes(headers: Sequence[str]) -> HeaderIndexes | None:
 def find_headers(line: str) -> HeaderIndexes | None:
     headers = next(csv.reader([line]), [])
     return _find_header_indexes(headers)
-
 
 def _generate_metrics(
     fields: Sequence[str],
@@ -157,6 +168,10 @@ def process_file(
     if header_indexes is None:
         raise ValueError("Could not find the required headers in the input file")
 
+
+###########################
+##  Reporting Functions  ##
+###########################
 
 def get_overall_metrics_and_execute_threshold_analysis(
     label:str, 
@@ -320,6 +335,9 @@ def create_report(
     return threshold_fail_msg_list, threshold_pass_msg_list
 
 
+############
+##  Main  ##
+############
 
 def main(config_file: str | os.PathLike[str] = "config.toml") -> None:
     try:
@@ -329,7 +347,7 @@ def main(config_file: str | os.PathLike[str] = "config.toml") -> None:
         datetime_bucket_manager = DateTimeBucketManager(config["bucket_minutes"])
         sample_collection = SampleCollection()
         PassFailCriteria.set_valid_metric_list(OVERALL_METRICS_HDR_LIST)
-        pass_fail_criteria_coll = PassFailCriteriaCollection.create_and_populate_pf_criteria_collection(config["threshold_list"])
+        pass_fail_criteria_coll = get_pass_fail_criteria_collection_from_json(config["pass_fail_criteria_json"])
 
         rslt_files = config["jmeter_stats_files"].split("|")
         for file_name in rslt_files:

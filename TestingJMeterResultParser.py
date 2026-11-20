@@ -6,6 +6,10 @@ from types import SimpleNamespace
 from unittest.mock import Mock
 
 from DateTimeBucketManager import DateTimeBucketManager
+from PassFailCriteria import (
+    PassFailCriteria,
+    get_pass_fail_criteria_collection_from_json,
+)
 from JMeterResultParser import (
     get_bucket_stats_lists,
     get_overall_metrics_and_execute_threshold_analysis,
@@ -32,6 +36,23 @@ class TestJMeterResultParser(unittest.TestCase):
             perc_75=4.0,
             perc_90=6.0,
             perc_95=8.0,
+        )
+
+    def test_get_pass_fail_criteria_collection_builds_criteria_from_json(self):
+        PassFailCriteria.set_valid_metric_list(["avg_elapsed_ms"])
+        try:
+            criteria_collection = get_pass_fail_criteria_collection_from_json(
+                '{"pass_fail_criteria_list": ['
+                '{"label": "Search", "metric": "avg_elapsed_ms", '
+                '"operator": "<", "threshold_value": 22.0}]}'
+            )
+        finally:
+            PassFailCriteria.set_valid_metric_list([])
+
+        criteria = criteria_collection.pf_criteria_dict["Search_avg_elapsed_ms"]
+        self.assertEqual(
+            (criteria.label, criteria.metric, criteria.operator, criteria.threshold_value),
+            ("Search", "avg_elapsed_ms", "<", 22.0),
         )
 
     def test_process_file_uses_csv_columns_and_preserves_quoted_labels(self):

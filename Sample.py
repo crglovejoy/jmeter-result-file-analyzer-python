@@ -1,3 +1,8 @@
+
+####################
+##  CLASS SAMPLE  ##
+####################
+
 class Sample:
     __slots__ = (
         "__total_count",
@@ -38,6 +43,10 @@ class Sample:
     def success_elapsed_ms(self) -> float:
         return self.__success_elapsed_ms
 
+
+#############################################
+##  CLASS ROLLUP SAMPLE (Child of Sample)  ##
+#############################################
 
 class RollupSample(Sample):
     __slots__ = (

@@ -4,9 +4,18 @@ from Sample import RollupSample, Sample
 from types import MappingProxyType
 from typing import Final, Mapping
 
+
+#################
+##  Constants  ##
+#################
+
 OVERALL_SUMMARY_LABEL_PREFIX: Final[str] = "overall_rollup"
 BUCKET_SUMMARY_LABEL_PREFIX: Final[str] = "bucket_rollup"
 
+
+###############################
+##  CLASS SAMPLE COLLECTION  ##
+###############################
 
 class SampleCollection:
     __slots__ = ("__sample_dict", "__label_list")

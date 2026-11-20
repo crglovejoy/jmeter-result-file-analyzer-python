@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
 
+######################################
+##  CLASS DATE TIME BUCKET MANAGER  ##
+######################################
 
 class DateTimeBucketManager:
     __slots__ = (
