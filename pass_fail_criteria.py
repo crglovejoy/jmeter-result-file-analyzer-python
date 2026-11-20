@@ -161,5 +161,3 @@ class PassFailCriteriaCollection:
         return found, passed, fail_str, pass_str
         
         
-
-    
