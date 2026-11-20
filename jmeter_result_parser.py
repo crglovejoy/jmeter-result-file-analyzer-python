@@ -13,7 +13,7 @@ from typing import Sequence, Final
 
 from datetime_bucket_manager import DateTimeBucketManager
 from sample_collection import SampleCollection
-from sample import RollupSample
+from sample_types import RollupSample
 
 
 #################
